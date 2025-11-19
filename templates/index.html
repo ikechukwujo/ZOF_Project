@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ZOF - Zero of Function Solver</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap CDN for simple styling -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <div class="container">
+    <h1 class="mb-3">ZOF - Zero of Function Solver (Web GUI)</h1>
+
+    {% if error_msg %}
+      <div class="alert alert-danger">{{ error_msg }}</div>
+    {% endif %}
+
+    <form method="post" class="mb-4">
+      <div class="mb-3">
+        <label class="form-label">Function f(x)</label>
+        <input class="form-control" name="fexpr" placeholder="e.g. x**3 - x - 2" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Method</label>
+        <select class="form-select" name="method" id="methodSelect" onchange="toggleFields()">
+          <option value="bisection">Bisection</option>
+          <option value="regula">Regula Falsi</option>
+          <option value="secant">Secant</option>
+          <option value="newton">Newton-Raphson</option>
+          <option value="fixed">Fixed Point Iteration</option>
+          <option value="modified">Modified Secant</option>
+        </select>
+      </div>
+
+      <div id="intervalFields" class="mb-3">
+        <label>Interval endpoints (a, b)</label>
+        <div class="row">
+          <div class="col"><input class="form-control" name="a" placeholder="a (e.g. 1)"></div>
+          <div class="col"><input class="form-control" name="b" placeholder="b (e.g. 2)"></div>
+        </div>
+      </div>
+
+      <div id="initialFields" style="display:none;" class="mb-3">
+        <label>Initial guesses</label>
+        <div class="row">
+          <div class="col"><input class="form-control" name="x0" placeholder="x0"></div>
+          <div class="col"><input class="form-control" name="x1" placeholder="x1 (for secant)"></div>
+        </div>
+      </div>
+
+      <div id="gField" style="display:none;" class="mb-3">
+        <label>g(x) for Fixed Point (x = g(x))</label>
+        <input class="form-control" name="gexpr" placeholder="e.g. (x + 2/x)/2">
+      </div>
+
+      <div id="deltaField" style="display:none;" class="mb-3">
+        <label>Delta for Modified Secant</label>
+        <input class="form-control" name="delta" placeholder="1e-4">
+      </div>
+
+      <div class="row mb-3">
+        <div class="col">
+          <label>Tolerance</label>
+          <input class="form-control" name="tol" placeholder="1e-6">
+        </div>
+        <div class="col">
+          <label>Max Iterations</label>
+          <input class="form-control" name="maxiter" placeholder="50">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Compute</button>
+    </form>
+
+    {% if result %}
+      <h3>Result (method: {{ result.method }})</h3>
+      <p><strong>Root:</strong> {{ result.root }}</p>
+      <p><strong>Final error/|f(root)|:</strong> {{ result.final_err }}</p>
+      <p><strong>Iterations:</strong> {{ result.iters }}</p>
+
+      <h4>Iteration log</h4>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr>
+              <th>iter</th>
+              <th>data</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in result.logs %}
+              <tr>
+                <td>{{ row.iter }}</td>
+                <td>
+                  {% for k, v in row.items() %}
+                    {% if k != 'iter' %}
+                      <strong>{{k}}:</strong> {{ "%.10g"|format(v) }} &nbsp;
+                    {% endif %}
+                  {% endfor %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+  </div>
+
+<script>
+function toggleFields(){
+  const method = document.getElementById('methodSelect').value;
+  document.getElementById('intervalFields').style.display = (method==='bisection' || method==='regula') ? 'block' : 'none';
+  document.getElementById('initialFields').style.display = (method==='secant' || method==='newton' || method==='modified' || method==='fixed') ? 'block' : 'none';
+  document.getElementById('gField').style.display = (method==='fixed') ? 'block' : 'none';
+  document.getElementById('deltaField').style.display = (method==='modified') ? 'block' : 'none';
+}
+window.onload = toggleFields;
+</script>
+
+</body>
+</html>
